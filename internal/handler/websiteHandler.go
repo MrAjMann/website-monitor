@@ -1,17 +1,19 @@
-package handlers
+package handler
 
 import (
 	"fmt"
 	"html/template"
-	model "htmx-webserver/internal/models"
+	model "website-monitor/internal/models"
+	"website-monitor/internal/repository"
+
 	"net/http"
 )
 
-type websiteHandler struct {
-	
+type WebsiteHandler struct {
+	repo *repository.WebsiteRepository
 }
 
-func (h *websiteHandler) AddWebsiteHandler(w http.ResponseWriter, r *http.Request) {
+func (h *WebsiteHandler) AddWebsite(w http.ResponseWriter, r *http.Request) {
 
 	website := r.PostFormValue("website-title")
 	url := r.PostFormValue("website-url")

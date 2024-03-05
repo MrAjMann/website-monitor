@@ -1,23 +1,34 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
 	"net"
 	"net/http"
-	"github.com/MrAjMann/website-monitoring/handlers"
+	"os"
 	"time"
+
+	"github.com/MrAjMann/website-monitor/internal/handler/websitehandler"
+
+	"github.com/joho/godotenv"
 )
 
-type Website struct {
-	Name   string
-	URL    string
-	Status string
-}
-
 func main() {
-	fmt.Println("Server started at http://localhost:8080")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	log.Println("Connecting to DB...")
+	databaseURL := os.Getenv("DATABASE_URL")
+
+	db, err := sql.Open("postgres", databaseURL)
+	if err != nil {
+		log.Fatal("Error connecting to the DB", err)
+	}
+	defer db.Close()
 	// Create a file server for static files this includes tailwindcss files
 	fs := http.FileServer(http.Dir("src"))
 	http.Handle("/src/", http.StripPrefix("/src/", fs))
@@ -28,15 +39,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		websites := map[string][]Website{
-			"Websites": {
-				{Name: "AM Website Solutions", URL: "https://amwebsolutions.com.au", Status: "Online"},
-				{Name: "Outback Edge Studio's", URL: "https://outback-edge-studio.vercel.app", Status: "Online"},
-			},
-		}
 
 		// Execute the template
-		tmpl.Execute(w, websites)
+		tmpl.Execute(w, nil)
 
 	}
 
@@ -59,11 +64,9 @@ func main() {
 		return status
 	}
 
-
-
 	http.HandleFunc("/", h1)
-	http.HandleFunc("/add-website/", AddWebsiteHandler)
-
+	http.HandleFunc("/add-website/", websitehandler.AddWebsite)
+	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
