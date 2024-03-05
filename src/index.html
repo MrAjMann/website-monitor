@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX Webserver Template</title>
+    <link href="/src/output.css" rel="stylesheet" />
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+
+</head>
+<body class="w-full m-auto max-w-[120rem] ">
+    
+    <h1 class="text-black font-medium text-3xl">Website Health check</h1>
+<div class="flex justify-center ">
+
+    <div class="flex flex-col justify-center w-full gap-4">
+        <div >
+            <h2 class="text-black text-xl font-light ">Live Websites</h2>
+            <table class="flex flex-col  ">
+                <thead class="">
+                    <tr class=" border-r border-white flex w-full  bg-blue-700 text-white rounded-lg">
+                        <th class="flex-1 border-r border-white p-4">Website Title</th>
+                        <th class="flex-1 border-r border-white p-4">Website URL</th>
+                        <th class="flex-1 border-r border-white p-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="w-full " id="website-list">
+                    
+                    {{range .Websites }}
+                    {{ block "website-list-element" .}}
+                            <tr class='py-2 w-full flex border-b border-gray-300 items-center' >
+                              
+                                    <td class=' w-full text-lg text-black '>
+                                        {{ .Name }}
+                                    </td>
+                             
+                               
+                                    <td class='w-full text-lg text-black '>
+                                        {{ .URL }}
+                                    </td>
+                             
+                             
+                                    <td class=' w-full  text-lg text-black '>
+                                        {{.Status }}
+                                    </td> 
+                             
+                           </tr>  
+                         
+                    {{end}}
+                    {{ end }}
+
+
+              
+                </tbody>
+                </table>
+           
+        </div>
+    </div>
+    <div class="flex ml-12  min-w-80  mr-48  ">
+        <div >
+            <h2 class="text-white text-xl font-light">Add Websites</h2>
+            
+            <Form class="" hx-post="/add-website/" hx-target="#website-list" hx-swap="beforeend" hx-on::after-request=" if(event.detail.successful) this.reset()">
+                
+                <div class=" flex flex-col gap-4">
+
+                    <div class=" ">
+                        <label for="website-title" class="font-bold text-gray-700">Website Title</label>
+                        <input type="text" name="website-title" id="website-title" class="form-control border ring-1 w-full px-2 py-1 rounded-md "></input>
+                    </div>
+                    <div class="">
+                        <label for="website-url" class="font-bold text-gray-700">Website URL</label>
+                        <input type="text" name="website-url" id="website-url" class="form-control border ring-1 w-full px-2 py-1 rounded-md"></input>
+                    </div>
+                    <button type="submit" class="px-4 py-2 w-auto rounded-xl bg-blue-700 text-white my-2" >   <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true"></span>
+                        Submit
+                    </button>
+                </div>
+            </Form>
+            
+        </div>
+    </div>
+</div>
+</body>
+</html>
