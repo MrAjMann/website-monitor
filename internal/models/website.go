@@ -5,7 +5,7 @@ import (
 )
 
 type Website struct {
-	Id        string
+	Id        int
 	Name      string
 	URL       string
 	Status    string

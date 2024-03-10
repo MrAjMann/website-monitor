@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -15,54 +14,42 @@ import (
 )
 
 func main() {
-	// Load the .env file
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	initEnv()
+	db := initDB()
+	defer db.Close()
 
+	websiteRepo := repository.NewWebsiteRepository(db)
+	StartStatusChecker(websiteRepo)
+	initHTTPHandlers(websiteRepo)
+
+}
+func initEnv() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+}
+
+func initDB() *sql.DB {
 	log.Println("Connecting to DB...")
-
-	// Database connection code
-	if err != nil {
-		log.Printf("Database connection error: %v", err)
-		return
-	}
 	databaseURL := os.Getenv("DATABASE_URL")
-
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatal("Error connecting to the database: ", err)
 	}
-	defer db.Close()
-	// Create a file server for static files this includes tailwindcss files
+	return db
+}
 
-	// Templates
-	websiteRepo := repository.NewWebsiteRepository(db)
-	if websiteRepo == nil {
-		println("Creating customers table")
-	}
-
-	websitehandler := handler.NewWebsiteHandler(websiteRepo, nil)
-
-	h1 := func(w http.ResponseWriter, r *http.Request) {
-
-		tmpl, err := template.ParseFiles("src/index.html")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Execute the template
-		tmpl.Execute(w, nil)
-
-	}
+func initHTTPHandlers(websiteRepo *repository.WebsiteRepository) {
+	websiteHandler := handler.NewWebsiteHandler(websiteRepo, nil)
 
 	fs := http.FileServer(http.Dir("src"))
 	http.Handle("/src/", http.StripPrefix("/src/", fs))
+	http.HandleFunc("/", websiteHandler.ServerHome)
+	http.HandleFunc("/get-websites/", websiteHandler.GetAllWebsites)
+	http.HandleFunc("/get-website-status", websiteHandler.GetWebsiteStatusById)
+	http.HandleFunc("/delete-website", websiteHandler.DeleteWebsiteById)
+	http.HandleFunc("/add-website/", websiteHandler.AddWebsite)
 
-	http.HandleFunc("/", h1)
-	http.HandleFunc("/add-website/", websitehandler.AddWebsite)
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
